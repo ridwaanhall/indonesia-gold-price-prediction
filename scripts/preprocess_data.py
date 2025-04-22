@@ -57,6 +57,24 @@ class GoldPricePreprocessor:
 
         # Sort by date
         self.df = self.df.sort_values(by='lastUpdate')
+        
+        # Handle zero values in hargaJual and hargaBeli columns
+        # First, create a mask for zero values
+        sell_zeros_mask = self.df["hargaJual"] == 0
+        buy_zeros_mask = self.df["hargaBeli"] == 0
+
+        # Replace zeros with NaN
+        self.df.loc[sell_zeros_mask, "hargaJual"] = float('nan')
+        self.df.loc[buy_zeros_mask, "hargaBeli"] = float('nan')
+
+        # Interpolate the missing values
+        # Linear interpolation works well for short gaps
+        self.df["hargaJual"] = self.df["hargaJual"].interpolate(method='linear')
+        self.df["hargaBeli"] = self.df["hargaBeli"].interpolate(method='linear')
+
+        # In case there are still NaNs at the beginning or end, use forward/backward fill
+        self.df["hargaJual"] = self.df["hargaJual"].ffill().bfill()
+        self.df["hargaBeli"] = self.df["hargaBeli"].ffill().bfill()
 
         # Rename columns to match expected format
         self.df.rename(columns={
@@ -77,9 +95,10 @@ class GoldPricePreprocessor:
         self.df["sell_ma30"] = self.df["sell"].rolling(window=30).mean().ffill()
         self.df["sell_ma365"] = self.df["sell"].rolling(window=365).mean().ffill()
 
-        # Price Change Percentage
-        self.df["price_change_pct"] = self.df["sell"].pct_change() * 100
-        self.df["price_change_pct"] = self.df["price_change_pct"].fillna(0)
+        # Price Change Percentage - no need for separate handling of zeros now
+        self.df["price_change_pct"] = self.df["sell"].pct_change(fill_method=None) * 100
+        # Replace any inf values with NaN and then fill NaN with 0
+        self.df["price_change_pct"] = self.df["price_change_pct"].replace([float('inf'), float('-inf')], float('nan')).fillna(0)
 
         # Volatility (Rolling Standard Deviation over 30 days)
         self.df["sell_volatility_30"] = self.df["sell"].rolling(window=30).std().fillna(0)
@@ -87,6 +106,7 @@ class GoldPricePreprocessor:
         # Time Features
         self.df["day_of_week"] = self.df["date"].dt.dayofweek
         self.df["quarter"] = self.df["date"].dt.quarter
+        self.df["month"] = self.df["date"].dt.month.astype('int32')
 
     def save_data(self) -> None:
         """
