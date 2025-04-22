@@ -5,7 +5,7 @@ import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
-from model import GoldPriceLSTM
+from model import GoldPriceLSTM, EnhancedGoldPriceLSTM
 from data_loader import get_data_loader
 
 def train_model(config):
@@ -48,15 +48,24 @@ def train_model(config):
         shuffle=False
     )
     
-    # Initialize model
+    # Initialize model based on the use_attention parameter
     input_size = len(dataset.features)
-    model = GoldPriceLSTM(
-        input_size=input_size,
-        hidden_size=config['hidden_size'],
-        num_layers=config['num_layers'],
-        dropout=config['dropout'],
-        use_attention=config['use_attention']
-    ).to(device)
+    if config.get('use_attention', False):
+        print("Using Enhanced LSTM model with attention mechanism")
+        model = EnhancedGoldPriceLSTM(
+            input_size=input_size,
+            hidden_size=config['hidden_size'],
+            num_layers=config['num_layers'],
+            dropout=config['dropout']
+        ).to(device)
+    else:
+        print("Using standard LSTM model")
+        model = GoldPriceLSTM(
+            input_size=input_size,
+            hidden_size=config['hidden_size'],
+            num_layers=config['num_layers'],
+            dropout=config['dropout']
+        ).to(device)
     
     # Loss function and optimizer
     criterion = nn.MSELoss()
