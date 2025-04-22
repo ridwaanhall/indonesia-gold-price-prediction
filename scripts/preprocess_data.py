@@ -91,9 +91,15 @@ class GoldPricePreprocessor:
         self.df["buy"] = self.df["buy"].ffill()
 
         # Feature Engineering: Moving Averages
-        self.df["sell_ma7"] = self.df["sell"].rolling(window=7).mean().ffill()
-        self.df["sell_ma30"] = self.df["sell"].rolling(window=30).mean().ffill()
-        self.df["sell_ma365"] = self.df["sell"].rolling(window=365).mean().ffill()
+        self.df["sell_ma7"] = self.df["sell"].rolling(window=7).mean()
+        self.df["sell_ma30"] = self.df["sell"].rolling(window=30).mean()
+        self.df["sell_ma365"] = self.df["sell"].rolling(window=365).mean()
+
+        # Handle missing values in moving averages by backfilling
+        # This will use the first available value to fill starting NaNs
+        self.df["sell_ma7"] = self.df["sell_ma7"].bfill().ffill()
+        self.df["sell_ma30"] = self.df["sell_ma30"].bfill().ffill()
+        self.df["sell_ma365"] = self.df["sell_ma365"].bfill().ffill()
 
         # Price Change Percentage - no need for separate handling of zeros now
         self.df["price_change_pct"] = self.df["sell"].pct_change(fill_method=None) * 100
