@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from typing import List, Tuple, Dict, Union, Optional
 import calendar
-from model import GoldPriceLSTM
+from model import GoldPriceLSTM, EnhancedGoldPriceLSTM
 from data_loader import GoldPriceDataset
 
 class GoldPricePredictor:
@@ -42,19 +42,41 @@ class GoldPricePredictor:
         """
         return GoldPriceDataset(self.data_path, sequence_length=self.sequence_length)
 
-    def _load_model(self) -> GoldPriceLSTM:
+    def _load_model(self) -> torch.nn.Module:
         """
         Load the trained LSTM model.
         
         Returns:
-            GoldPriceLSTM: Trained PyTorch model
+            torch.nn.Module: Trained PyTorch model (either standard or enhanced with attention)
         """
         # Determine input size from dataset features
         input_size = len(self.dataset.features)
         
-        # Initialize model with the same architecture used for training
-        model = GoldPriceLSTM(input_size=input_size)
-        model.load_state_dict(torch.load(self.model_path, map_location=torch.device('cpu')))
+        # Try to load state dict to determine model type
+        state_dict = torch.load(self.model_path, map_location=torch.device('cpu'))
+        
+        # Check if model has attention mechanisms (keys like "attention.weight")
+        uses_attention = any("attention" in key for key in state_dict.keys())
+        
+        if uses_attention:
+            print("Loading Enhanced LSTM model with attention mechanism")
+            model = EnhancedGoldPriceLSTM(
+                input_size=input_size,
+                hidden_size=128,  # Default values to match training configuration
+                num_layers=3,
+                dropout=0.3
+            )
+        else:
+            print("Loading standard LSTM model")
+            model = GoldPriceLSTM(
+                input_size=input_size,
+                hidden_size=128,
+                num_layers=2,
+                dropout=0.2
+            )
+        
+        # Load the model weights
+        model.load_state_dict(state_dict)
         model.eval()
         
         return model
