@@ -58,20 +58,32 @@ class GoldPricePredictor:
         # Check if model has attention mechanisms (keys like "attention.weight")
         uses_attention = any("attention" in key for key in state_dict.keys())
         
+        # Check for number of layers - count distinct layer numbers in lstm weights
+        lstm_layer_nums = set()
+        for key in state_dict.keys():
+            if key.startswith("lstm.weight"):
+                parts = key.split("_")
+                for part in parts:
+                    if part.startswith("l") and len(part) > 1 and part[1:].isdigit():
+                        lstm_layer_nums.add(int(part[1:]))
+        
+        # Number of layers is the highest layer number + 1 (since indexing starts at 0)
+        num_layers = max(lstm_layer_nums) + 1 if lstm_layer_nums else 2
+        
         if uses_attention:
-            print("Loading Enhanced LSTM model with attention mechanism")
+            print(f"Loading Enhanced LSTM model with attention mechanism and {num_layers} layers")
             model = EnhancedGoldPriceLSTM(
                 input_size=input_size,
                 hidden_size=128,  # Default values to match training configuration
-                num_layers=3,
+                num_layers=num_layers,
                 dropout=0.3
             )
         else:
-            print("Loading standard LSTM model")
+            print(f"Loading standard LSTM model with {num_layers} layers")
             model = GoldPriceLSTM(
                 input_size=input_size,
                 hidden_size=128,
-                num_layers=2,
+                num_layers=num_layers,
                 dropout=0.2
             )
         
