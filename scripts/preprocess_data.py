@@ -40,7 +40,8 @@ class GoldPricePreprocessor:
         Processes the raw gold price data:
         - Converts columns to appropriate data types
         - Removes duplicates
-        - Renames columns to match expected output
+        - Handles missing values using forward fill and smart replacements
+        - Applies feature engineering (moving averages, volatility)
         - Saves processed data to a CSV file
         """
         raw_data = self.load_data()
@@ -66,6 +67,26 @@ class GoldPricePreprocessor:
 
         # Keep only necessary columns
         self.df = self.df[['date', 'sell', 'buy']]
+
+        # Handle missing values using ffill (Forward Fill)
+        self.df["sell"] = self.df["sell"].ffill()
+        self.df["buy"] = self.df["buy"].ffill()
+
+        # Feature Engineering: Moving Averages
+        self.df["sell_ma7"] = self.df["sell"].rolling(window=7).mean().ffill()
+        self.df["sell_ma30"] = self.df["sell"].rolling(window=30).mean().ffill()
+        self.df["sell_ma365"] = self.df["sell"].rolling(window=365).mean().ffill()
+
+        # Price Change Percentage
+        self.df["price_change_pct"] = self.df["sell"].pct_change() * 100
+        self.df["price_change_pct"] = self.df["price_change_pct"].fillna(0)
+
+        # Volatility (Rolling Standard Deviation over 30 days)
+        self.df["sell_volatility_30"] = self.df["sell"].rolling(window=30).std().fillna(0)
+
+        # Time Features
+        self.df["day_of_week"] = self.df["date"].dt.dayofweek
+        self.df["quarter"] = self.df["date"].dt.quarter
 
     def save_data(self) -> None:
         """
