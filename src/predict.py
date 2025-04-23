@@ -6,6 +6,10 @@ from typing import List, Tuple, Dict, Union, Optional
 import calendar
 from model import GoldPriceLSTM, EnhancedGoldPriceLSTM
 from data_loader import GoldPriceDataset
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import os
+from dateutil.relativedelta import relativedelta
 
 class GoldPricePredictor:
     """
@@ -407,7 +411,7 @@ class GoldPricePredictor:
         indexed_df = full_predictions.set_index('date')
         
         # Resample to monthly frequency, taking the mean for each month
-        monthly_predictions = indexed_df.resample('M').mean().reset_index()
+        monthly_predictions = indexed_df.resample('ME').mean().reset_index()
         
         # Also include the last day prediction for complete range
         last_day = full_predictions.iloc[-1:].copy()
@@ -416,7 +420,119 @@ class GoldPricePredictor:
         result = pd.concat([monthly_predictions, last_day]).sort_values('date')
         
         return result
+
+    def plot_predictions_for_periods(self, save_dir: str = "plots") -> Dict[str, str]:
+        """
+        Generate and plot predictions for various time periods, showing historical
+        data and predictions in the same chart. Saves plots to the specified directory.
+        
+        Args:
+            save_dir (str): Directory to save the generated plots
+            
+        Returns:
+            Dict[str, str]: Dictionary mapping time periods to saved plot paths
+        """
+        # Create save directory if it doesn't exist
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        
+        # Get historical data from dataset
+        historical_df = self.dataset.df[["date", "sell"]].copy()
+        
+        # Time periods to predict
+        periods = [
+            {"name": "1_month", "months": 1, "title": "Next 1 Month"},
+            {"name": "2_months", "months": 2, "title": "Next 2 Months"},
+            {"name": "3_months", "months": 3, "title": "Next 3 Months"},
+            {"name": "6_months", "months": 6, "title": "Next 6 Months"},
+            {"name": "1_year", "years": 1, "title": "Next 1 Year"},
+            {"name": "2_years", "years": 2, "title": "Next 2 Years"},
+            {"name": "3_years", "years": 3, "title": "Next 3 Years"},
+            {"name": "4_years", "years": 4, "title": "Next 4 Years"},
+            {"name": "5_years", "years": 5, "title": "Next 5 Years"},
+        ]
+        
+        # Get last date from dataset
+        _, last_date = self.dataset.get_last_sequence()
+        
+        # Store plot paths
+        plot_paths = {}
+        
+        # Generate predictions and plots for each period
+        for period in periods:
+            # Calculate days to predict
+            days = 0
+            if "months" in period:
+                days = period["months"] * 30  # Approximate
+            elif "years" in period:
+                days = period["years"] * 365  # Approximate
+            
+            # Generate predictions
+            predictions_df = self.predict_future(days=days)
+            
+            # Create a plot
+            fig, ax = plt.figure(figsize=(12, 6)), plt.gca()
+            
+            # Plot historical data - use last 365 days or 3 times prediction period (whichever is longer)
+            lookback_days = max(365, days * 3)
+            historical_to_plot = historical_df[historical_df["date"] >= (last_date - timedelta(days=lookback_days))]
+            ax.plot(historical_to_plot["date"], historical_to_plot["sell"], 
+                   color="blue", label="Historical Prices")
+            
+            # Plot predictions
+            ax.plot(predictions_df["date"], predictions_df["predicted_price"], 
+                   color="red", linestyle="--", label="Predicted Prices")
+            
+            # Add vertical line at prediction start
+            ax.axvline(x=last_date, color="green", linestyle="-.", label="Prediction Start")
+            
+            # Configure plot
+            title = f"Gold Price - {period['title']} Prediction"
+            ax.set_title(title, fontsize=16)
+            ax.set_xlabel("Date", fontsize=12)
+            ax.set_ylabel("Price (IDR per 0.01g)", fontsize=12)
+            ax.grid(True, alpha=0.3)
+            ax.legend(loc="best")
+            
+            # Format x-axis dates based on the prediction period
+            if days <= 60:  # 2 months or less
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+                plt.xticks(rotation=45)
+            elif days <= 365:  # 1 year or less
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
+                plt.xticks(rotation=45)
+            else:  # Multi-year
+                ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+            
+            # Auto-adjust date ticks
+            plt.gcf().autofmt_xdate()
+            
+            # Add prediction info to plot
+            if days <= 365:
+                last_price = historical_df.iloc[-1]["sell"]
+                predicted_price = predictions_df.iloc[-1]["predicted_price"]
+                change_pct = (predicted_price - last_price) / last_price * 100
                 
+                text = f"Current: {last_price:.2f}\nPredicted ({period['title']}): {predicted_price:.2f}\nChange: {change_pct:.2f}%"
+                
+                # Place textbox
+                plt.figtext(0.02, 0.02, text, fontsize=10,
+                           bbox={"facecolor": "white", "alpha": 0.8, "pad": 5})
+            
+            # Save the plot with timestamp to avoid overwriting
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            filename = f"gold_prediction_{period['name']}_{timestamp}.png"
+            filepath = os.path.join(save_dir, filename)
+            
+            plt.tight_layout()
+            plt.savefig(filepath, dpi=300)
+            plt.close()
+            
+            print(f"Saved {period['title']} prediction plot to: {filepath}")
+            plot_paths[period["name"]] = filepath
+        
+        return plot_paths
+
 # For direct execution
 if __name__ == "__main__":
     model_path = "models/gold_price_lstm.pth"
@@ -452,5 +568,11 @@ if __name__ == "__main__":
     combined = pd.concat([five_year_pred.head(3), five_year_pred.tail(3)])
     print(combined[['date', 'predicted_price']])
     print(f"\n... and {len(five_year_pred) - 6} more monthly predictions.")
+    
+    # Generate and save plots for various periods
+    print("\n✅ Generating and saving prediction plots for various periods...")
+    plot_paths = predictor.plot_predictions_for_periods()
+    for period, path in plot_paths.items():
+        print(f"{period}: {path}")
     
     print("\nDone!")
