@@ -6,8 +6,8 @@ from predict import GoldPricePredictor
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Predict Indonesia Gold Prices')
-    parser.add_argument('--mode', choices=['next_day', 'days', 'specific_date', 'range', 'plot'], default='next_day',
-                        help='Prediction mode: next_day, days ahead, specific date, date range, or create plots')
+    parser.add_argument('--mode', choices=['next_day', 'days', 'specific_date', 'range', 'plot', 'all_periods'], default='next_day',
+                        help='Prediction mode: next_day, days ahead, specific date, date range, plot, or all_periods')
     parser.add_argument('--days', type=int, default=1, 
                         help='Number of days to predict ahead (for days mode)')
     parser.add_argument('--date', type=str, default=None, 
@@ -24,6 +24,8 @@ def parse_args():
                         help='Path to save predictions as CSV (optional)')
     parser.add_argument('--plot_dir', type=str, default='plots',
                         help='Directory to save plot images (for plot mode)')
+    parser.add_argument('--results_dir', type=str, default='results',
+                        help='Directory to save CSV prediction results (for all_periods mode)')
     return parser.parse_args()
 
 def main():
@@ -51,6 +53,52 @@ def main():
                 print(f"- {os.path.basename(path)}")
             
             print(f"\nAll plots have been saved to: {os.path.abspath(args.plot_dir)}")
+        
+        elif args.mode == 'all_periods':
+            print(f"\nGenerating predictions from next day to 5 years...")
+            
+            # Create directories if they don't exist
+            if not os.path.exists(args.plot_dir):
+                os.makedirs(args.plot_dir)
+                
+            if not os.path.exists(args.results_dir):
+                os.makedirs(args.results_dir)
+                
+            # Generate plots and get the paths
+            plot_paths = predictor.plot_predictions_for_periods(save_dir=args.plot_dir)
+            
+            # Define time periods
+            periods = [
+                {"name": "1_month", "months": 1, "days": 30},
+                {"name": "2_months", "months": 2, "days": 60},
+                {"name": "3_months", "months": 3, "days": 90},
+                {"name": "6_months", "months": 6, "days": 180},
+                {"name": "1_year", "years": 1, "days": 365},
+                {"name": "2_years", "years": 2, "days": 730},
+                {"name": "3_years", "years": 3, "days": 1095},
+                {"name": "4_years", "years": 4, "days": 1460},
+                {"name": "5_years", "years": 5, "days": 1825},
+            ]
+            
+            print("\nGenerating CSV files with predictions:")
+            
+            # Generate predictions for each period and save to CSV
+            for period in periods:
+                # Get predictions for this period
+                predictions_df = predictor.predict_future(days=period["days"])
+                
+                # Extract basename from the plot path and use it for CSV
+                if period["name"] in plot_paths:
+                    plot_basename = os.path.basename(plot_paths[period["name"]])
+                    csv_filename = plot_basename.replace('.png', '.csv')
+                    csv_path = os.path.join(args.results_dir, csv_filename)
+                    
+                    # Save predictions to CSV
+                    predictions_df.to_csv(csv_path, index=False)
+                    print(f"- Saved {period['name']} predictions to: {csv_path}")
+            
+            print(f"\nAll CSV prediction files have been saved to: {os.path.abspath(args.results_dir)}")
+            print(f"All plot files have been saved to: {os.path.abspath(args.plot_dir)}")
         
         elif args.mode == 'next_day':
             # Predict just the next day
