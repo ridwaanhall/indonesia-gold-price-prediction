@@ -1,12 +1,13 @@
 import argparse
 from datetime import datetime, timedelta
 import pandas as pd
+import os
 from predict import GoldPricePredictor
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Predict Indonesia Gold Prices')
-    parser.add_argument('--mode', choices=['next_day', 'days', 'specific_date', 'range'], default='next_day',
-                        help='Prediction mode: next_day, days ahead, specific date, or date range')
+    parser.add_argument('--mode', choices=['next_day', 'days', 'specific_date', 'range', 'plot'], default='next_day',
+                        help='Prediction mode: next_day, days ahead, specific date, date range, or create plots')
     parser.add_argument('--days', type=int, default=1, 
                         help='Number of days to predict ahead (for days mode)')
     parser.add_argument('--date', type=str, default=None, 
@@ -21,6 +22,8 @@ def parse_args():
                         help='Path to the processed CSV data')
     parser.add_argument('--output', type=str, default=None,
                         help='Path to save predictions as CSV (optional)')
+    parser.add_argument('--plot_dir', type=str, default='plots',
+                        help='Directory to save plot images (for plot mode)')
     return parser.parse_args()
 
 def main():
@@ -32,7 +35,24 @@ def main():
         
         results = None
         
-        if args.mode == 'next_day':
+        if args.mode == 'plot':
+            print(f"\nGenerating prediction plots for multiple time periods...")
+            print(f"Plots will be saved to: {args.plot_dir}")
+            
+            # Create plots directory if it doesn't exist
+            if not os.path.exists(args.plot_dir):
+                os.makedirs(args.plot_dir)
+                
+            # Generate plots for various time periods
+            plot_paths = predictor.plot_predictions_for_periods(save_dir=args.plot_dir)
+            
+            print("\nGenerated the following prediction plots:")
+            for period, path in plot_paths.items():
+                print(f"- {os.path.basename(path)}")
+            
+            print(f"\nAll plots have been saved to: {os.path.abspath(args.plot_dir)}")
+        
+        elif args.mode == 'next_day':
             # Predict just the next day
             next_date, next_price = predictor.predict_next_day()
             results = pd.DataFrame({'date': [next_date], 'predicted_price': [next_price]})
