@@ -1,145 +1,167 @@
-# **The Next 5 Years of Gold Prices in Indonesia: AI Predictions Based on Historical Trends**
+# **Indonesia Gold Price Prediction: AI-Powered Forecasting System**
 
 ## 📌 **Project Overview**
 
-This project uses machine learning to predict Indonesia's gold prices over the next 5 years based on historical data. The system employs LSTM (Long Short-Term Memory) neural networks that can recognize complex patterns in time series data, allowing for accurate short-term predictions and reasonable long-term forecasts.
+This project uses deep learning (LSTM neural networks) to predict Indonesian gold prices over multiple time horizons based on historical data. The system analyzes past price patterns to generate accurate short-term predictions and reasonable long-term forecasts up to 5 years ahead.
 
-The model is trained on 10+ years of historical gold price data and can predict future gold prices with various time horizons:
-- Next day prediction
-- Short-term predictions (days to months)
+The model is trained on 10+ years of historical gold price data and can output predictions for:
+- Next day price
+- Short-term forecasts (1-6 months)
 - Long-term forecasts (1-5 years)
 
-The predictions are visualized through plots and can be exported to CSV files for further analysis.
+All predictions are visualized through interactive plots and can be exported to CSV files for further analysis.
 
-## 🔍 **Objectives**
+## 🔍 **Technical Implementation**
 
-1. **Data Processing:** Clean and prepare historical gold price data for model training
-2. **Feature Engineering:** Generate relevant features like moving averages and volatility metrics
-3. **Model Development:** Create and train LSTM models for time series forecasting
-4. **Prediction System:** Build a flexible prediction system for various time horizons
-5. **Visualization:** Generate insightful plots showing prediction trends
-6. **Data Export:** Save predictions to CSV files for further analysis
+### Core Components:
 
-## 📊 **Methodology**
+1. **Data Processing Pipeline:**
+   - Raw data loading from JSON/CSV sources
+   - Preprocessing with handling of missing values and duplicates
+   - Feature engineering including moving averages and volatility metrics
+   - Data normalization for improved model performance
 
-1. **Data Collection:** Historical gold price data from multiple sources
-2. **Preprocessing:** Cleaning, normalization, and feature engineering
-3. **Model Architecture:** Multi-layer LSTM neural networks with attention mechanism
-4. **Training Process:** Supervised learning with historical data sequences
-5. **Evaluation:** Validation against historical trends and market dynamics
-6. **Deployment:** Command-line interface for making predictions
+2. **Deep Learning Architecture:**
+   - LSTM neural networks (Long Short-Term Memory)
+   - Multiple variants including standard and enhanced models with attention mechanisms
+   - Multi-layer architecture with dropout for regularization
+   - Bidirectional capabilities for improved pattern recognition
+
+3. **Training System:**
+   - Configurable hyperparameters with early stopping
+   - Learning rate scheduling for optimal convergence
+   - Validation-based model selection
+   - Loss visualization for training analysis
+
+4. **Prediction Engine:**
+   - Multiple prediction modes for different time horizons
+   - Seasonal adjustment for long-term predictions
+   - Support for single-day and date-range predictions
+   - Comprehensive visualization capabilities
 
 ## 🛠️ **Project Structure**
 
 ```
 ├── data/                 # Data storage
-│   ├── raw/              # Raw gold price data
-│   └── processed/        # Processed datasets
-├── models/               # Trained model files
+│   ├── raw/              # Raw gold price data (JSON)
+│   └── processed/        # Processed datasets (CSV)
+├── models/               # Trained model files (.pth)
 ├── notebooks/            # Jupyter notebooks for exploration
-├── plots/                # Generated prediction plots
+├── plots/                # Generated prediction plots (.png)
 ├── results/              # CSV prediction results  
 ├── scripts/              # Data processing scripts
 └── src/                  # Source code
-    ├── data_loader.py    # Dataset preparation
-    ├── model.py          # LSTM model architecture
-    ├── predict.py        # Prediction functionality
-    ├── run_prediction.py # CLI for predictions
-    └── train.py          # Model training
+    ├── data_loader.py    # Dataset preparation and normalization
+    ├── model.py          # LSTM model architectures (standard & enhanced)
+    ├── predict.py        # Prediction engine with visualization
+    ├── run_prediction.py # CLI for different prediction modes
+    └── train.py          # Model training system
 ```
 
-## 📈 **Features**
+## 📊 **Key Features**
 
-- **Multiple Prediction Modes:**
-  - Next-day prediction
-  - Multi-day forecasting (specific number of days)
-  - Date-specific prediction
-  - Date range predictions
-  - 1-5 year forecasts
+### Data Processing
+- **Automated cleaning:** Handles missing values, outliers, and duplicates
+- **Feature engineering:** Creates temporal features like moving averages (7, 30, 365 days)
+- **Volatility metrics:** Calculates price volatility over rolling windows
+- **Cyclical encoding:** Transforms time-based features (day, month) using sine/cosine functions
 
-- **Advanced Visualizations:**
-  - Historical vs predicted prices
-  - Various time horizons (1 month to 5 years)
-  - Clear trend indicators
+### Model Architecture
+- **Standard LSTM:** Multi-layer architecture with dropout for regularization
+- **Enhanced LSTM:** Bidirectional LSTM with attention mechanism for improved pattern recognition
+- **Residual connections:** For better gradient flow during training
+- **Batch normalization:** For improved training stability
 
-- **Data Export:**
-  - Save predictions to CSV files in the results folder
-  - Flexible output formatting
+### Prediction Capabilities
+- **Multiple time horizons:** From next-day to 5-year predictions
+- **Seasonal adjustments:** Accounts for monthly and weekly patterns
+- **Visualization:** Interactive plots showing historical and predicted prices
+- **CSV export:** Saves predictions in structured format for analysis
 
 ## 🚀 **How to Use**
 
-### 1. **Prerequisites**
+### 1. **Setup Environment**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. **Train the Model** (optional, pre-trained model included)
+Required packages include:
+- torch (PyTorch)
+- pandas
+- numpy
+- matplotlib
+- seaborn
+
+### 2. **Data Preprocessing**
+```bash
+python scripts/preprocess_data.py
+```
+This converts raw JSON data to a processed CSV with engineered features.
+
+### 3. **Train the Model** (optional, pre-trained model included)
 ```bash
 python src/train.py
 ```
 
-### 3. **Make Predictions**
+### 4. **Make Predictions**
 
 #### Next Day Prediction:
 ```bash
-python src/run_prediction.py --mode next_day --output results/next_day_prediction.csv
+python src/run_prediction.py --mode next_day
 ```
 
 #### Predict Multiple Days:
 ```bash
-python src/run_prediction.py --mode days --days 30 --output results/30_days_prediction.csv
+python src/run_prediction.py --mode days --days 30
 ```
 
 #### Predict for Specific Date:
 ```bash
-python src/run_prediction.py --mode specific_date --date 2025-12-31 --output results/specific_date_prediction.csv
+python src/run_prediction.py --mode specific_date --date 2025-12-31
 ```
 
 #### Predict for Date Range:
 ```bash
-python src/run_prediction.py --mode range --start_date 2025-05-01 --end_date 2025-06-30 --output results/date_range_prediction.csv
+python src/run_prediction.py --mode range --start_date 2025-05-01 --end_date 2025-06-30
 ```
 
-#### Generate Prediction Plots:
+#### Generate All Prediction Plots:
 ```bash
 python src/run_prediction.py --mode plot
 ```
 
-## 📊 **Saving Predictions**
+#### Generate All Predictions (plots and CSV files):
+```bash
+python src/run_prediction.py --mode all_periods
+```
 
-All prediction modes support saving results to CSV files using the `--output` parameter. By default, these should be stored in the `results/` folder:
+### 5. **Save Predictions**
+All prediction modes support saving results to CSV using the `--output` parameter:
 
-1. **Basic Example:**
 ```bash
 python src/run_prediction.py --mode next_day --output results/gold_prediction.csv
 ```
 
-2. **Including Date in Filename:**
-```bash
-python src/run_prediction.py --mode days --days 365 --output results/gold_prediction_1year_$(date +%Y%m%d).csv
-```
+## 📋 **Model Performance and Limitations**
 
-3. **Long-term Predictions:**
-```bash
-python src/run_prediction.py --mode range --start_date 2025-05-01 --end_date 2030-05-01 --output results/five_year_forecast.csv
-```
-
-The CSV files contain two columns:
-- `date`: The prediction date
-- `predicted_price`: The predicted gold price in IDR per 0.01g
-
-## 📋 **Results Interpretation**
-
-- **Short-term predictions (1-30 days):** High accuracy and confidence
+### Prediction Accuracy
+- **Short-term (1-30 days):** High accuracy with low prediction error
 - **Medium-term (1-6 months):** Good directional accuracy with moderate price precision
 - **Long-term (1-5 years):** Best used for trend analysis rather than exact price predictions
 
-## 🔮 **Future Improvements**
+### Limitations
+- Cannot account for unexpected market shocks or black swan events
+- Long-term predictions incorporate inherent uncertainty
+- Model requires periodic retraining as new data becomes available
 
-1. Integration of external economic indicators
-2. Ensemble models combining multiple forecasting approaches
-3. Web interface for easy prediction access
-4. Real-time data updates and predictions
+## 🔍 **Data Exploration**
+
+The project includes a Jupyter notebook (`notebooks/data_exploration.ipynb`) with detailed data analysis:
+- Historical price trend visualization
+- Moving average analysis
+- Volatility patterns
+- Seasonal patterns by month
+- Feature correlation analysis
 
 ## 📝 **License**
 
