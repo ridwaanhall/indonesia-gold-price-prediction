@@ -7,7 +7,7 @@ debugpy==1.8.14
 decorator==5.2.1
 executing==2.2.0
 filelock==3.18.0
-fonttools==4.57.0
+fonttools==4.61.0
 fsspec==2025.3.2
 ipykernel==6.29.5
 ipython==9.1.0
@@ -27,7 +27,7 @@ numpy==2.2.5
 packaging==25.0
 pandas==2.2.3
 parso==0.8.4
-pillow==11.2.1
+pillow==11.3.0
 platformdirs==4.3.7
 prompt_toolkit==3.0.51
 psutil==7.0.0
@@ -43,8 +43,8 @@ setuptools==79.0.0
 six==1.17.0
 stack-data==0.6.3
 sympy==1.13.1
-torch==2.6.0
-tornado==6.4.2
+torch==2.8.0
+tornado==6.5
 traitlets==5.14.3
 typing_extensions==4.13.2
 tzdata==2025.2
