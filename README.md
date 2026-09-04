@@ -206,4 +206,21 @@ The project includes a Jupyter notebook (`notebooks/data_exploration.ipynb`) wit
 
 ## 📝 **License**
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+The code in this repository is released under **CC0 1.0 Universal** — see [LICENSE](LICENSE).
+That matches the other from-scratch machine learning projects in this family
+(`Neural-Network-from-Scratch`, `LSTM-Gold-from-Scratch`) and places the code in
+the public domain, so no attribution is required to reuse it.
+
+> Earlier revisions of this file said MIT while the repository carried no
+> LICENSE at all. Code published without a licence is all rights reserved
+> whatever a README says, so nobody had permission to reuse it in the meantime.
+> CC0 is strictly more permissive than the MIT that was advertised, so this
+> resolves the gap without withdrawing anything anyone could have relied on.
+
+**The bundled data is not ours to license.** `data/raw/` contains gold price
+series retrieved from a third-party public endpoint. Those records belong to
+their original publisher, and CC0 here covers this project's own code, notebooks
+and documentation — not the underlying data. Check the source's own terms before
+redistributing it.
+
+Maintained by RoneAI (PT RoneAI Teknologi Internasional) — <hello@rone.dev>
