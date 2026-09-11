@@ -32,14 +32,14 @@ platformdirs==4.3.7
 prompt_toolkit==3.0.51
 psutil==7.0.0
 pure_eval==0.2.3
-Pygments==2.19.1
+Pygments==2.20.0
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 pytz==2025.2
 pywin32==310
 pyzmq==26.4.0
 seaborn==0.13.2
-setuptools==83.0.0
+setuptools==84.0.0
 six==1.17.0
 stack-data==0.6.3
 sympy==1.13.1
